@@ -18,6 +18,9 @@ ftpclient: $(OBJS)
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
+run: all
+	./ftpclient
+
 clean:
 	$(RM) $(OBJS)
 
