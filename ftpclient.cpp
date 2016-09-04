@@ -9,6 +9,7 @@ struct FtpFile {
 size_t writeFile(void *buffer, size_t size, size_t nmemb, void *stream) {
 	printf("We got a callback\n");
 
+	
 	return size;
 }
 
@@ -26,12 +27,12 @@ int main(int argc, char *argv[]) {
 	curl = curl_easy_init();
 
 	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, "ftp://localhost/ftpexample");
+		curl_easy_setopt(curl, CURLOPT_URL, "ftp://localhost/input/ftpexample");
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFile);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
-		curl_easy_setopt(curl, CURLOPT_USERNAME, "tempuser");
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, "temp");
+		curl_easy_setopt(curl, CURLOPT_USERNAME, "mumbler");
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, "ASDFqwer1234"); //Changed my password temporarily for this program.
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 		res = curl_easy_perform(curl);

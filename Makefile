@@ -6,17 +6,17 @@ LDFLAGS=-g $(shell root-config --ldflags)
 LDLIBS=-lcurl $(shell root-config --libs)
 
 SRCS=ftpclient.cpp
-OBJS=$(subst .cc,.o,$(SRCS))
+OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: ftpclient
 
 ftpclient: $(OBJS)
 	$(CXX) $(LDFLAGS) -o ftpclient $(OBJS) $(LDLIBS) 
 
-#ftpclient.o: ftpclient.cpp
+ftpclient.o: ftpclient.cpp
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+#%.o: %.cpp
+#	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 run: all
 	./ftpclient
