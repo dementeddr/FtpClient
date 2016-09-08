@@ -1,9 +1,14 @@
+class Logger {
 
-public:
-	void Logger();
-	void ~Logger();
-	
-	void Out(const char* text);
+	public:
+		Logger();
+		Logger(char *filename);
+		~Logger();
 
-private:
-	FILE logfile;
+		void Out(const char *text);
+
+	private:
+		FILE *logfile;
+
+		void CreateLogger(char *filename);
+};
