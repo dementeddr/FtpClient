@@ -7,10 +7,22 @@ struct FtpFile {
 };
 
 size_t writeFile(void *buffer, size_t size, size_t nmemb, void *stream) {
+
 	printf("We got a callback\n");
 
-	
-	return size;
+	// Casting
+	struct FtpFile *output=(struct FtpFile *) stream;
+
+	if (output && !output->stream) {
+		output->stream = fopen(output->filename, "wb");
+		
+		if (!output->stream) {
+			// Log an error here
+			return -1;
+		}
+
+		return fwrite(buffer, size, nmemb, output->stream);
+	}
 }
 
 int main(int argc, char *argv[]) {
