@@ -17,10 +17,11 @@ void Logger::CreateLogger(char *filename) {
 	// logging. We'll see.
 	logfile = fopen(filename, "a");
 
-	time_t time;
+	time_t now = time(0);
+	//time(&timev);
 
 	fprintf(logfile, "\n---- LOG FILE OPENED ----\n");
-	fprintf(logfile, "Log opened at %d", time);
+	fprintf(logfile, "Log opened at %d\n", ctime(&now));
 }
 
 Logger::~Logger() {
@@ -29,8 +30,10 @@ Logger::~Logger() {
 
 void Logger::Out(const char* text) {
 	// Get time at some point
-	char *time = "--:--:--";
+	time_t now = time(0);
 
-	fprintf(logfile, "[%s]: %s\n", time, text);
+	// Logging to a file? Logging to stdout? WHY NOT BOTH!?
+	fprintf(logfile, "[%d]: %s\n", ctime(&now), text);
+	fprintf(stdout, "%s\n", ctime(&now), text);
 }
 

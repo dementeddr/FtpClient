@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <curl/curl.h>
+#include "logger.h"
 
 struct FtpFile {
 	const char *filename;
@@ -8,6 +8,9 @@ struct FtpFile {
 
 size_t writeFile(void *buffer, size_t size, size_t nmemb, void *stream) {
 
+	// Eventually, this whole thing will be an object and we can
+	// log through the logger. Since this is a specific callback,
+	// we can't really pass it in.
 	printf("We got a callback\n");
 
 	// Casting
@@ -29,6 +32,7 @@ int main(int argc, char *argv[]) {
 	
 	CURL *curl;
 	CURLcode res;
+	Logger log;
 
 	struct FtpFile ftpfile = {
 		"/home/mumbler/output/ftp_output.txt",
@@ -37,6 +41,8 @@ int main(int argc, char *argv[]) {
 
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	curl = curl_easy_init();
+
+	log.Out("About to attempt the Curl call");
 
 	if (curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, "ftp://localhost/input/ftpexample");
@@ -50,11 +56,13 @@ int main(int argc, char *argv[]) {
 		res = curl_easy_perform(curl);
 
 		if (res != CURLE_OK) {
-			printf("FTP could not complete. Curl error code: %d\n", res); 
+			log.Out("FTP could not complete. Curl error code: " + res); 
+		} else {
+			log.Out("FTP was successful");
 		}
 		
 	} else {
-		printf("Curl could not initialize\n");
+		log.Out("Curl could not initialize");
 	}
 
 	if (ftpfile.stream)
