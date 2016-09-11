@@ -5,7 +5,7 @@ CPPFLAGS=-g $(shell root-config --cflags)
 LDFLAGS=-g $(shell root-config --ldflags)
 LDLIBS=-lcurl $(shell root-config --libs)
 
-SRCS=ftpclient.cpp logger.cpp
+SRCS=ftpclient.cpp logger.cpp ftphandler.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: ftpclient
@@ -16,6 +16,8 @@ ftpclient: $(OBJS)
 ftpclient.o: ftpclient.cpp
 
 logger.o: logger.cpp
+
+ftphandler.o: ftphandler.cpp
 
 #%.o: %.cpp
 #	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
