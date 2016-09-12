@@ -5,6 +5,8 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+// This could ideally be replaced by reflection, but I'm not
+// going to get into that.
 enum Origin {
 	MAIN,
 	LOGGER,
@@ -23,11 +25,13 @@ class Logger {
 		Logger(const std::string filename);
 		~Logger();
 
-		void Out(Origin from, const std::string text);
+		void Log(Origin from, const std::string text);
+		void Print(Origin from, const std::string text);
 
 	private:
-
+		
 		void CreateLogger(const std::string filename);
+		void Output(Origin from, const std::string text, bool print);
 };
 
 #endif

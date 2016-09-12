@@ -40,8 +40,7 @@ class FtpHandler {
 		std::string password;
 		std::string hostname;
 
-		std::vector<std::string> urlPieces;
-		//FtpFile ftpfile;
+		std::vector<std::string> pathPieces;
 };
 
 #endif
