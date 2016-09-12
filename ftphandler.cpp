@@ -48,12 +48,11 @@ FtpHandler::~FtpHandler() {
 }
 
 
-size_t writeCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
+size_t retrieveCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
 
-	// Casting
 	struct FtpFile *output = (struct FtpFile *)stream;
 
-	output->log->Out(HANDLER, "Received file of size " + ((int) size));
+	output->log->Out(HANDLER, "Retrieved file of size " + ((int) size));
 
 	if (output && !output->stream) {
 		output->stream = fopen(output->filename.c_str(), "wb");
@@ -77,15 +76,6 @@ static size_t listCallback(void *buffer, size_t size, size_t nmemb, void *stream
 	if (output && !output->stream) {
 		return fwrite(buffer, size, nmemb, stdout);
 	}
-}
-
-
-static size_t changeDirCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
-
-	struct FtpFile *output = (struct FtpFile *)stream;
-	output->log->Out(HANDLER, "Received list of size " + std::to_string(size));
-
-	if (output && !output->stream) {}
 }
 
 
@@ -172,7 +162,30 @@ CURLcode FtpHandler::FtpChangeDir(std::string input) {
 
 
 CURLcode FtpHandler::FtpRetrieve(std::string target, std::string destination) {
+	
+	struct FtpFile ftpfile = {
+		destination,
+		NULL,
+		log
+	};
 
+	std::string request = "RETR " + GetPath() + target;
+
+	printf("FtpList: %s\nRequest: %s\n", GetUrl().c_str(), request.c_str());
+
+	curl_easy_setopt(curl, CURLOPT_URL, GetUrl().c_str());
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, retrieveCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, request.c_str());
+
+	CURLcode res = ExecuteFtp();
+
+	if (ftpfile.stream)
+		fclose(ftpfile.stream);
+
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
+
+	return res;
 }
 
 

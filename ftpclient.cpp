@@ -45,8 +45,10 @@ void InputLoop(Logger *log, FtpHandler *handler) {
 		} else if (cmd == "retr" || cmd == "get") {
 			if (params.size() == 2) {
 				handler->FtpRetrieve(params[0], params[1]);
+			} else if (params.size() == 1) {
+				handler->FtpRetrieve(params[0], params[0]);
 			} else {
-				log->Out(HANDLER, "Retrieve command requires two arguments"); 
+				log->Out(HANDLER, "Too many arguments for list command"); 
 			}
 
 		} else if (cmd == "stor" || cmd == "put") {
@@ -65,7 +67,6 @@ void InputLoop(Logger *log, FtpHandler *handler) {
 				log->Out(HANDLER, "Too many arguments for cd command");
 			}
 
-		} else if (cmd == "retr" || cmd == "get") {
 		} else if (cmd == "exit" || cmd == "quit") {
 			break;
 		} else{
