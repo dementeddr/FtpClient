@@ -1,9 +1,9 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-g $(shell root-config --cflags)
-LDFLAGS=-g $(shell root-config --ldflags)
-LDLIBS=-lcurl $(shell root-config --libs)
+CPPFLAGS=-g -std=c++11 #$(shell root-config --cflags)
+LDFLAGS=-g #$(shell root-config --ldflags)
+LDLIBS=-lcurl #$(shell root-config --libs)
 
 SRCS=ftpclient.cpp logger.cpp ftphandler.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))

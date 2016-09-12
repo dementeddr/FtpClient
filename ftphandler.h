@@ -1,5 +1,6 @@
 #include <curl/curl.h>
 #include <string>
+#include <vector>
 
 #include "logger.h"
 
@@ -16,19 +17,25 @@ struct FtpFile {
 class FtpHandler {
 
 	public:
-		FtpHandler(Logger *logp);
+		FtpHandler();
+		FtpHandler(std::string hostname, std::string username, std::string password, Logger *log);
 		~FtpHandler();
 
 		bool Initialize();
-	//	size_t writeFile(void *buffer, size_t size, 
-	//		size_t nmemb, void *stream);
 		
-		bool dumpMethod();
+		std::string GetFullUrl();
+		bool ExecuteFtp();
 	
 	private:
 		CURL *curl;
 		CURLcode res;
 		Logger *log;
+
+		std::string username;
+		std::string password;
+
+		std::vector<std::string> urlPieces;
+		//FtpFile ftpfile;
 };
 
 #endif

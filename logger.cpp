@@ -40,8 +40,13 @@ void Logger::Out(Origin from, const std::string text) {
 		default:	  prefix = "UNKNOWN";	break;
 	}
 
+	// Fun fact, ctime() adds a newline character at the end which
+	// kind of breaks how the log should look.
+	std::string stime = ctime(&now);
+	stime.pop_back();
+
 	// Logging to a file? Logging to stdout? WHY NOT BOTH!?
-	fprintf(logfile, "[%s] %s: %s\n", ctime(&now), prefix.c_str(), text.c_str());
+	fprintf(logfile, "[%s] %s: %s\n", stime.c_str(), prefix.c_str(), text.c_str());
 	fprintf(stdout, "%s\n", text.c_str());
 }
 
