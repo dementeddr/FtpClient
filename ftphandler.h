@@ -24,7 +24,8 @@ class FtpHandler {
 		bool Initialize();
 		
 		std::string GetFullUrl();
-		bool ExecuteFtp();
+		CURLcode FtpList(std::string input);
+		CURLcode ExecuteFtp();
 	
 	private:
 		CURL *curl;

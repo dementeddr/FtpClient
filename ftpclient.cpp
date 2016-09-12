@@ -3,20 +3,71 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include "logger.h"
 #include "ftphandler.h"
 
+
+void InputLoop(Logger *log, FtpHandler *handler) {
+
+	std::string input;
+	std::string cmd;
+	std::string word;
+	
+	CURLcode res = CURLE_OK;
+
+	printf("Entering Input loop\n");
+
+	do {
+		printf("[%s]> ", handler->GetFullUrl().c_str());
+
+		std::vector<std::string> params;
+
+		getline(std::cin, input);
+		std::stringstream iss(input);
+
+		iss >> cmd;
+
+		while (iss >> word) {
+			params.push_back(word);
+		}
+
+		if (cmd == "list" || cmd == "ls") {
+			if (params.size() == 0) {
+				handler->FtpList("");
+			} else if (params.size() == 1) {
+				handler->FtpList(params[0]);
+			} else {
+				log->Out(HANDLER, "Too many arguments for list command");
+			}
+		} else if (cmd == "retr" || cmd == "get") {
+
+		} else if (cmd == "stor" || cmd == "put") {
+
+		} else if (cmd == "cd"   || cmd == "cwd") {
+
+		} else if (cmd == "exit" || cmd == "quit") {
+			break;
+		} else{
+			log->Out(HANDLER, cmd + " is not an ftpclient command.");
+		}
+
+	} while (true);
+}
+
+
 int main(int argc, char *argv[]) {
 
 	Logger log;
+	CURLcode res;
 	std::string username;
 	std::string password;
 	std::string hostname;
 
 	if (argc !=2) {
 		printf("Usage: ftpclient <hostname>\n");
-		return 1;
+		return 1; // The actual return value isn't important
 	}
 
 	// If this was a real program, I would have the client make
@@ -36,8 +87,17 @@ int main(int argc, char *argv[]) {
 	FtpHandler handler(hostname, username, password, &log);
 
 	if (!handler.Initialize()) {
-		return 2; //Couldn't start CURL for some reason.
+		// Couldn't start CURL for some reason. The actual 
+		// number isn't important.
+		return 2; 
 	}
 
-	handler.ExecuteFtp();
+	//res = handler.FtpList("."); 
+
+/*
+	if (res != CURLE_OK) {
+		return res; 
+	}
+*/
+	InputLoop(&log, &handler);
 }

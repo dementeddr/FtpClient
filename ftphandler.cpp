@@ -25,14 +25,19 @@ bool FtpHandler::Initialize() {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	curl = curl_easy_init();
 
-	if (curl) {
-		log->Out(HANDLER, "CURL initialized");
-		return true;
-
-	} else {
+	if (curl == NULL) {
 		log->Out(HANDLER, "ERROR: CURL could not initialize");
 		return false;
 	}
+
+	log->Out(HANDLER, "CURL initialized");
+
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	curl_easy_setopt(curl, CURLOPT_STDERR, log->logfile);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str()); 
+	
+	return true;
 }
 
 
@@ -41,7 +46,7 @@ FtpHandler::~FtpHandler() {
 }
 
 
-size_t writeFile(void *buffer, size_t size, size_t nmemb, void *stream) {
+size_t writeCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
 
 	// Casting
 	struct FtpFile *output = (struct FtpFile *)stream;
@@ -52,11 +57,23 @@ size_t writeFile(void *buffer, size_t size, size_t nmemb, void *stream) {
 		output->stream = fopen(output->filename.c_str(), "wb");
 		
 		if (!output->stream) {
-			
+			output->log->Out(HANDLER, "Could not open file " + output->filename + " for writing.");
 			return -1;
 		}
 
 		return fwrite(buffer, size, nmemb, output->stream);
+	}
+}
+
+
+size_t listCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
+	
+	struct FtpFile *output = (struct FtpFile *)stream;
+
+	output->log->Out(HANDLER, "Received list of size " + std::to_string(size));
+
+	if (output && !output->stream) {
+		return fwrite(buffer, size, nmemb, stdout);
 	}
 }
 
@@ -72,36 +89,50 @@ std::string FtpHandler::GetFullUrl() {
 			url.push_back('/');
 		}
 	}
+
+	return url;
 }
 
 
-// To be sorted out later
-bool FtpHandler::ExecuteFtp() {
-
+CURLcode FtpHandler::FtpList(std::string input) {
+	
 	struct FtpFile ftpfile = {
-		"/home/mumbler/output/ftp_output.txt",
+		"unused",
 		NULL,
 		log
 	};
 
-	//ftpfile = ffile;
+	//std::string url = GetFullUrl() + input;
+	std::string request = "LIST " + input;
+
+	printf("FtpList: %s\nRequest: %s\n", GetFullUrl().c_str(), request.c_str());
+
+	curl_easy_setopt(curl, CURLOPT_URL, GetFullUrl().c_str());
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, listCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
+//	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "LIST " + input);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, request.c_str());
+
+	CURLcode res = ExecuteFtp();
+
+	if (ftpfile.stream)
+		fclose(ftpfile.stream);
+
+	return res;
+}
+
+
+// To be sorted out later
+CURLcode FtpHandler::ExecuteFtp() {
 
 	log->Out(HANDLER, "About to attempt the Curl call");
 
 	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, GetFullUrl());
-		curl_easy_setopt(curl, CURLOPT_STDERR, log->logfile);
-
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFile);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
-		curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str()); //Changed my password temporarily for this program. Yes, this is a BAD idea.
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 		res = curl_easy_perform(curl);
 
 		if (res != CURLE_OK) {
-			log->Out(HANDLER, "FTP could not complete. Curl error code: " + res); 
+			log->Out(HANDLER, "FTP could not complete. Curl error code: " + std::to_string((unsigned int) res)); 
 		} else {
 			log->Out(HANDLER, "FTP was successful");
 		}
@@ -110,9 +141,6 @@ bool FtpHandler::ExecuteFtp() {
 		log->Out(HANDLER, "Curl could not initialize");
 	}
 
-	if (ftpfile.stream)
-		fclose(ftpfile.stream);
-
-	return 0;
+	return res;
 }
 
