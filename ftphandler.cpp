@@ -2,19 +2,21 @@
 
 // This constructor is not actually supported.
 FtpHandler::FtpHandler() :
+	hostname("localhost"),
 	username("anonymous"),
 	password(""),
 	log(NULL) {
 	
-	urlPieces.push_back("ftp://");
-	}
+	urlPieces.push_back("~");
+}
 
 FtpHandler::FtpHandler(std::string hostname, std::string username, std::string password, Logger *log) : 
+	hostname(hostname),
 	username(username),
 	password(password),
 	log(log) {
 	
-	urlPieces.push_back("ftp://" + hostname);
+	urlPieces.push_back("~");
 }
 
 // Ideally this would just be in the constructor, but you need to
@@ -66,7 +68,7 @@ size_t writeCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
 }
 
 
-size_t listCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
+static size_t listCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
 	
 	struct FtpFile *output = (struct FtpFile *)stream;
 
@@ -78,7 +80,16 @@ size_t listCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
 }
 
 
-std::string FtpHandler::GetFullUrl() {
+static size_t changeDirCallback(void *buffer, size_t size, size_t nmemb, void *stream) {
+
+	struct FtpFile *output = (struct FtpFile *)stream;
+	output->log->Out(HANDLER, "Received list of size " + std::to_string(size));
+
+	if (output && !output->stream) {}
+}
+
+
+std::string FtpHandler::GetPath() {
 
 	std::string url = "";
 
@@ -94,6 +105,11 @@ std::string FtpHandler::GetFullUrl() {
 }
 
 
+std::string FtpHandler::GetUrl() {
+	return "ftp://" + hostname + "/";
+}
+
+
 CURLcode FtpHandler::FtpList(std::string input) {
 	
 	struct FtpFile ftpfile = {
@@ -102,15 +118,13 @@ CURLcode FtpHandler::FtpList(std::string input) {
 		log
 	};
 
-	//std::string url = GetFullUrl() + input;
-	std::string request = "LIST " + input;
+	std::string request = "LIST " + GetPath() + input;
 
-	printf("FtpList: %s\nRequest: %s\n", GetFullUrl().c_str(), request.c_str());
+	printf("FtpList: %s\nRequest: %s\n", GetUrl().c_str(), request.c_str());
 
-	curl_easy_setopt(curl, CURLOPT_URL, GetFullUrl().c_str());
+	curl_easy_setopt(curl, CURLOPT_URL, GetUrl().c_str());
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, listCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
-//	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "LIST " + input);
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, request.c_str());
 
 	CURLcode res = ExecuteFtp();
@@ -118,7 +132,47 @@ CURLcode FtpHandler::FtpList(std::string input) {
 	if (ftpfile.stream)
 		fclose(ftpfile.stream);
 
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
+
 	return res;
+}
+
+
+CURLcode FtpHandler::FtpChangeDir(std::string input) {
+
+	std::vector<std::string> backupPath = urlPieces;
+
+	if (input == "..") {
+		if (urlPieces.size() > 1) {
+			urlPieces.pop_back();
+		} else {
+			log->Out(HANDLER, "Already at home directory");
+		}
+
+	} else if (input == "") {
+		while (urlPieces.size() > 1) {
+			urlPieces.pop_back();
+		}
+
+	} else if (input == ".") {
+		// Do nothing.
+
+	} else {
+		urlPieces.push_back(input);
+	}
+
+	CURLcode res = FtpList("");
+
+	if (res != CURLE_OK) {
+		urlPieces = backupPath;
+	}
+
+	return res;
+}
+
+
+CURLcode FtpHandler::FtpRetrieve(std::string target, std::string destination) {
+
 }
 
 

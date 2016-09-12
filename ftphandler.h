@@ -23,8 +23,12 @@ class FtpHandler {
 
 		bool Initialize();
 		
-		std::string GetFullUrl();
+		std::string GetPath();
+		std::string GetUrl();
+
 		CURLcode FtpList(std::string input);
+		CURLcode FtpChangeDir(std::string input);
+		CURLcode FtpRetrieve(std::string target, std::string destination);
 		CURLcode ExecuteFtp();
 	
 	private:
@@ -34,6 +38,7 @@ class FtpHandler {
 
 		std::string username;
 		std::string password;
+		std::string hostname;
 
 		std::vector<std::string> urlPieces;
 		//FtpFile ftpfile;

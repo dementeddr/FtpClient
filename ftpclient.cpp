@@ -20,7 +20,7 @@ void InputLoop(Logger *log, FtpHandler *handler) {
 	printf("Entering Input loop\n");
 
 	do {
-		printf("[%s]> ", handler->GetFullUrl().c_str());
+		printf("[%s]> ", handler->GetPath().c_str());
 
 		std::vector<std::string> params;
 
@@ -41,16 +41,35 @@ void InputLoop(Logger *log, FtpHandler *handler) {
 			} else {
 				log->Out(HANDLER, "Too many arguments for list command");
 			}
+
 		} else if (cmd == "retr" || cmd == "get") {
+			if (params.size() == 2) {
+				handler->FtpRetrieve(params[0], params[1]);
+			} else {
+				log->Out(HANDLER, "Retrieve command requires two arguments"); 
+			}
 
 		} else if (cmd == "stor" || cmd == "put") {
+			if (params.size() == 2) {
+				//handler->FtpRetrieve(params[0], params[1]);
+			} else {
+				//log->Out(HANDLER, "Retrieve command requires two arguments"); 
+			}
 
 		} else if (cmd == "cd"   || cmd == "cwd") {
+			if (params.size() == 0) {
+				handler->FtpChangeDir("");
+			} else if (params.size() == 1) {
+				handler->FtpChangeDir(params[0]);
+			} else {
+				log->Out(HANDLER, "Too many arguments for cd command");
+			}
 
+		} else if (cmd == "retr" || cmd == "get") {
 		} else if (cmd == "exit" || cmd == "quit") {
 			break;
 		} else{
-			log->Out(HANDLER, cmd + " is not an ftpclient command.");
+			log->Out(HANDLER, "\"" + cmd + "\" is not an ftpclient command.");
 		}
 
 	} while (true);
